@@ -1,0 +1,9 @@
+{
+  "name": "skill-office-email",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Agent 办公实践：模板化邮件构造与安全投递",
+  "type": "module",
+  "scripts": { "test": "node --test tests/" },
+  "engines": { "node": ">=18" }
+}
