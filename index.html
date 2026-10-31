@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CSS 精准微调台</title>
+<style>
+  :root { --ink: #1f2937; --muted: #6b7280; --line: #e5e7eb; --accent: #4f46e5; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; color: var(--ink); height: 100vh; display: flex; flex-direction: column; }
+  header { padding: 12px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 14px; }
+  header h1 { font-size: 16px; margin: 0; }
+  .hint { font-size: 12px; color: var(--muted); }
+  .layout { flex: 1; display: grid; grid-template-columns: 1fr 340px; min-height: 0; }
+  .stage { padding: 28px; overflow: auto; background: #f8fafc; }
+  .panel { border-left: 1px solid var(--line); padding: 16px; overflow: auto; font-size: 13px; }
+  .panel h2 { font-size: 12px; color: var(--muted); letter-spacing: .06em; margin: 18px 0 8px; font-weight: 500; }
+  .panel h2:first-child { margin-top: 0; }
+  .field { display: grid; grid-template-columns: 96px 1fr 56px; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .field input[type=range] { width: 100%; }
+  .field input[type=color] { width: 100%; height: 26px; border: 1px solid var(--line); border-radius: 6px; padding: 0; }
+  .val { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .selector { font-family: ui-monospace, Consolas, monospace; font-size: 12px; background: #eef2ff; color: #3730a3; padding: 6px 8px; border-radius: 6px; word-break: break-all; min-height: 30px; }
+  .out { width: 100%; min-height: 140px; font-family: ui-monospace, Consolas, monospace; font-size: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+  button { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 12px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+
+  /* 被调整的示例页面 */
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 20px; max-width: 520px; }
+  .card h3 { margin: 0 0 8px; font-size: 18px; }
+  .card p { margin: 0 0 12px; color: var(--muted); line-height: 1.7; }
+  .tag { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #eef2ff; color: #4338ca; font-size: 12px; }
+  .picked { outline: 2px dashed #f59e0b; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>CSS 精准微调台</h1>
+  <span class="hint">点选左侧任意元素 → 右侧滑杆微调 → 复制生成的 CSS 规则</span>
+</header>
+
+<div class="layout">
+  <div class="stage" id="stage">
+    <div class="card" data-testid="demo-card">
+      <h3 data-testid="demo-title">示例卡片标题</h3>
+      <p data-testid="demo-desc">选中我，然后用右侧滑杆调整内边距、字号与圆角。所有改动实时预览，并可一键导出为 CSS 规则。</p>
+      <span class="tag" data-testid="demo-tag">标签</span>
+    </div>
+  </div>
+
+  <aside class="panel">
+    <h2>当前选中</h2>
+    <div class="selector" id="selector">（未选中）</div>
+
+    <h2>调整</h2>
+    <div id="fields"></div>
+
+    <h2>生成的 CSS</h2>
+    <textarea class="out" id="out" readonly></textarea>
+    <div class="row">
+      <button class="primary" id="copy">复制 CSS</button>
+      <button id="undo">撤销一步</button>
+      <button id="revert">还原预览</button>
+      <button id="clear">清空记录</button>
+    </div>
+  </aside>
+</div>
+
+<script type="module">
+import { Surgeon, ADJUSTABLE, readStyles, selectorFor } from './src/surgeon.js'
+
+const surgeon = new Surgeon()
+const stage = document.getElementById('stage')
+const fieldsEl = document.getElementById('fields')
+const outEl = document.getElementById('out')
+const selectorEl = document.getElementById('selector')
+let current = null
+
+function markPicked(el) {
+  document.querySelectorAll('.picked').forEach((n) => n.classList.remove('picked'))
+  if (el) el.classList.add('picked')
+}
+
+function renderFields(el) {
+  const styles = readStyles(el)
+  fieldsEl.innerHTML = ''
+
+  for (const item of ADJUSTABLE) {
+    const row = document.createElement('div')
+    row.className = 'field'
+    row.innerHTML = `
+      <label>${item.key}</label>
+      <input type="range" min="${item.min}" max="${item.max}" step="${item.step}" value="${styles[item.key] ?? 0}" data-prop="${item.key}">
+      <span class="val">${styles[item.key] ?? 0}${item.unit}</span>`
+    const input = row.querySelector('input')
+    const val = row.querySelector('.val')
+    input.addEventListener('input', () => {
+      const v = Number(input.value)
+      val.textContent = `${v}${item.unit}`
+      surgeon.apply(current, item.key, v)
+      syncOut()
+    })
+    fieldsEl.appendChild(row)
+  }
+
+  for (const prop of ['color', 'background-color']) {
+    const row = document.createElement('div')
+    row.className = 'field'
+    row.innerHTML = `
+      <label>${prop}</label>
+      <input type="color" value="${styles[prop] || '#000000'}" data-prop="${prop}">
+      <span class="val"></span>`
+    const input = row.querySelector('input')
+    input.addEventListener('input', () => {
+      surgeon.apply(current, prop, input.value)
+      syncOut()
+    })
+    fieldsEl.appendChild(row)
+  }
+}
+
+function syncOut() {
+  outEl.value = surgeon.toCSS()
+}
+
+stage.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-testid], .tag, .card, h3, p')
+  if (!el || !stage.contains(el)) return
+  e.stopPropagation()
+  const { selector } = surgeon.select(el)
+  current = selector
+  selectorEl.textContent = selector
+  markPicked(el)
+  renderFields(el)
+  syncOut()
+})
+
+document.getElementById('undo').addEventListener('click', () => {
+  if (surgeon.undo()) {
+    syncOut()
+    if (current) renderFields(surgeon.changes.get(current).el)
+  }
+})
+document.getElementById('revert').addEventListener('click', () => {
+  surgeon.revertPreview()
+  syncOut()
+})
+document.getElementById('clear').addEventListener('click', () => {
+  surgeon.reset()
+  current = null
+  selectorEl.textContent = '（未选中）'
+  fieldsEl.innerHTML = ''
+  markPicked(null)
+  syncOut()
+})
+document.getElementById('copy').addEventListener('click', async () => {
+  const text = surgeon.toCSS()
+  if (!text) return
+  try {
+    await navigator.clipboard.writeText(text)
+    document.getElementById('copy').textContent = '已复制 ✓'
+    setTimeout(() => (document.getElementById('copy').textContent = '复制 CSS'), 1200)
+  } catch {
+    outEl.select()
+    document.execCommand('copy')
+  }
+})
+</script>
+</body>
+</html>

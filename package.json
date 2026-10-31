@@ -1,0 +1,9 @@
+{
+  "name": "css-surgeon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "浏览器内网页精准微调（点选元素 → 滑杆调整 → 导出 CSS）",
+  "type": "module",
+  "scripts": { "test": "node --test tests/" },
+  "engines": { "node": ">=18" }
+}
