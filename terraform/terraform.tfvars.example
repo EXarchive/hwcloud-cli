@@ -1,0 +1,9 @@
+# 复制为 terraform.tfvars 并填入真实值
+name_prefix       = "ict-net"
+region            = "cn-north-4"
+vpc_cidr          = "192.168.0.0/16"
+subnet_cidr       = "192.168.1.0/24"
+ssh_cidr          = "你的办公网出口/32"
+instance_flavor   = "s6.small.1"
+instance_count    = 1
+# admin_password  = "符合复杂度要求的密码"
