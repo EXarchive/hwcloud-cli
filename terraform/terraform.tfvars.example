@@ -1,0 +1,7 @@
+# 复制为 terraform.tfvars
+archive_bucket = "your-unique-archive-bucket"
+name_prefix    = "ict-web"
+region         = "cn-north-4"
+app_port       = 8080
+http_cidr      = "0.0.0.0/0"
+instance_count = 1
