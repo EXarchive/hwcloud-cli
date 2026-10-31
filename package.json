@@ -1,0 +1,9 @@
+{
+  "name": "agentteam-graduation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "多智能体协作完成毕业设计（可测试的编排内核）",
+  "type": "module",
+  "scripts": { "demo": "node src/run-demo.mjs", "test": "node --test tests/" },
+  "engines": { "node": ">=18" }
+}
