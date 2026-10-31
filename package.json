@@ -1,0 +1,14 @@
+{
+  "name": "hwcloud-cli",
+  "version": "1.0.0",
+  "private": true,
+  "description": "华为云服务命令行封装（零依赖 SDK-HMAC-SHA256 签名）",
+  "type": "module",
+  "scripts": {
+    "whoami": "node src/hwcli.mjs whoami",
+    "regions": "node src/hwcli.mjs regions",
+    "ecs": "node src/hwcli.mjs ecs:servers",
+    "test": "node --test tests/"
+  },
+  "engines": { "node": ">=18" }
+}
