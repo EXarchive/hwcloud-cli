@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>智慧课堂工作台</title>
+<style>
+  :root { --ink:#1f2937; --muted:#6b7280; --line:#e5e7eb; --accent:#0ea5e9; --ok:#10b981; --warn:#f59e0b; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif; color:var(--ink); background:#f6f8fb; }
+  header { padding:16px 24px; background:#fff; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  header h1 { font-size:17px; margin:0; }
+  .code { font-family:ui-monospace,Consolas,monospace; background:#eff6ff; color:#1d4ed8; padding:4px 10px; border-radius:8px; font-size:13px; }
+  main { max-width:1120px; margin:0 auto; padding:22px 24px 60px; display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:900px){ main { grid-template-columns:1fr; } }
+  .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px 20px; }
+  .card h2 { font-size:14px; margin:0 0 14px; color:var(--muted); font-weight:600; letter-spacing:.04em; }
+  button { border:1px solid var(--line); background:#fff; border-radius:9px; padding:7px 14px; cursor:pointer; font-size:13px; }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  .students { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { padding:6px 12px; border-radius:999px; border:1px solid var(--line); font-size:13px; cursor:pointer; background:#fff; transition:.15s; }
+  .chip.on { background:#ecfdf5; border-color:#a7f3d0; color:#047857; }
+  .kpi { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px; }
+  .kpi div { background:#f8fafc; border-radius:10px; padding:10px 12px; }
+  .kpi .k { font-size:11px; color:var(--muted); }
+  .kpi .v { font-size:20px; font-weight:700; margin-top:2px; }
+  .quiz-q { border-top:1px dashed var(--line); padding-top:12px; margin-top:12px; font-size:13px; }
+  .quiz-q:first-of-type { border-top:none; padding-top:0; margin-top:0; }
+  .quiz-q b { display:block; margin-bottom:6px; }
+  .opt { display:block; margin:3px 0; cursor:pointer; }
+  .result { margin-top:12px; font-size:13px; padding:10px 12px; border-radius:10px; background:#eff6ff; color:#1e40af; }
+  .bars { display:flex; gap:6px; align-items:flex-end; height:90px; margin-top:12px; }
+  .bars i { flex:1; background:var(--accent); border-radius:4px 4px 0 0; min-height:3px; display:block; }
+  .legend { display:flex; gap:6px; font-size:10px; color:var(--muted); margin-top:4px; }
+  .legend span { flex:1; text-align:center; }
+  .picked { font-size:15px; font-weight:700; color:var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>智慧课堂工作台</h1>
+  <span class="code" id="code">签到码 —</span>
+  <span style="font-size:12px;color:var(--muted)" id="sessionInfo"></span>
+</header>
+
+<main>
+  <section class="card">
+    <h2>签到</h2>
+    <div class="students" id="students"></div>
+    <div class="kpi">
+      <div><div class="k">应到</div><div class="v" id="kTotal">0</div></div>
+      <div><div class="k">实到</div><div class="v" id="kPresent">0</div></div>
+      <div><div class="k">出勤率</div><div class="v" id="kRate">0%</div></div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="primary" id="closeCheckin">结束签到</button>
+      <button id="reset">重置课堂</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>随机点名</h2>
+    <div style="display:flex;align-items:center;gap:14px">
+      <button class="primary" id="pick">点一位</button>
+      <span class="picked" id="pickedName">—</span>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:10px" id="pickStat">已点 0 次 / 覆盖 0 人</div>
+  </section>
+
+  <section class="card">
+    <h2>随堂测</h2>
+    <div id="quiz"></div>
+    <div style="margin-top:12px"><button class="primary" id="submitQuiz">提交作答</button></div>
+    <div id="quizResult"></div>
+  </section>
+
+  <section class="card">
+    <h2>课堂看板</h2>
+    <div class="kpi">
+      <div><div class="k">提交人数</div><div class="v" id="kSubmitted">0</div></div>
+      <div><div class="k">平均分</div><div class="v" id="kAvg">0</div></div>
+      <div><div class="k">参与度</div><div class="v" id="kPart">0%</div></div>
+    </div>
+    <div class="bars" id="bars"></div>
+    <div class="legend" id="legend"></div>
+  </section>
+</main>
+
+<script type="module">
+import { attendance, checkIn, closeCheckin, createSession, dashboard, pickStudent, startQuiz, submitQuiz } from './src/classroom.js'
+
+const STUDENTS = ['张三', '李四', '王五', '赵六', '钱七', '孙八', '周九', '吴十']
+const QUESTIONS = [
+  { id: 'q1', stem: '栈的特点是什么？', options: ['先进先出', '后进先出', '随机存取'], answer: 1 },
+  { id: 'q2', stem: '二叉树中序遍历的顺序是？', options: ['根左右', '左根右', '左右根'], answer: 1 },
+  { id: 'q3', stem: '哈希表平均查找复杂度是？', options: ['O(1)', 'O(n)', 'O(log n)'], answer: 0 },
+]
+
+let session = createSession({ id: 'demo', title: '数据结构第 8 讲', students: STUDENTS, seed: 2026 })
+let answers = new Array(QUESTIONS.length).fill(-1)
+
+const $ = (id) => document.getElementById(id)
+
+function render() {
+  $('code').textContent = `签到码 ${session.checkinCode}`
+  $('sessionInfo').textContent = `${session.title} · ${session.checkinOpen ? '签到进行中' : '签到已结束'}`
+
+  $('students').innerHTML = session.students
+    .map((s) => `<span class="chip${s.checkedIn ? ' on' : ''}" data-name="${s.name}">${s.name}${s.checkedIn ? ' ✓' : ''}</span>`)
+    .join('')
+
+  const att = attendance(session)
+  $('kTotal').textContent = att.total
+  $('kPresent').textContent = att.present
+  $('kRate').textContent = `${att.rate}%`
+
+  const d = dashboard(session)
+  $('pickStat').textContent = `已点 ${d.picking.total} 次 / 覆盖 ${d.picking.unique} 人`
+  $('kSubmitted').textContent = d.quiz.submitted
+  $('kAvg').textContent = d.quiz.avgScore
+  $('kPart').textContent = `${d.quiz.participation}%`
+
+  const buckets = Object.keys(d.quiz.distribution).sort()
+  const max = Math.max(1, ...Object.values(d.quiz.distribution))
+  $('bars').innerHTML = buckets.length
+    ? buckets.map((b) => `<i style="height:${(d.quiz.distribution[b] / max) * 100}%" title="${b}: ${d.quiz.distribution[b]} 人"></i>`).join('')
+    : '<i style="height:3%"></i>'
+  $('legend').innerHTML = buckets.length ? buckets.map((b) => `<span>${b}</span>`).join('') : '<span>暂无提交</span>'
+}
+
+function renderQuiz() {
+  $('quiz').innerHTML = QUESTIONS.map((q, qi) => `
+    <div class="quiz-q">
+      <b>${qi + 1}. ${q.stem}</b>
+      ${q.options
+        .map(
+          (opt, oi) =>
+            `<label class="opt"><input type="radio" name="q${qi}" value="${oi}" ${answers[qi] === oi ? 'checked' : ''}> ${opt}</label>`,
+        )
+        .join('')}
+    </div>`).join('')
+}
+
+$('students').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip')
+  if (!chip) return
+  const res = checkIn(session, chip.dataset.name, session.checkinCode)
+  if (!res.ok) alert(`签到失败：${res.reason === 'CLOSED' ? '签到已结束' : '未知学生'}`)
+  render()
+})
+
+$('closeCheckin').addEventListener('click', () => {
+  closeCheckin(session)
+  render()
+})
+
+$('reset').addEventListener('click', () => {
+  session = createSession({ id: 'demo', title: '数据结构第 8 讲', students: STUDENTS, seed: Date.now() })
+  answers = new Array(QUESTIONS.length).fill(-1)
+  renderQuiz()
+  $('quizResult').innerHTML = ''
+  $('pickedName').textContent = '—'
+  render()
+})
+
+$('pick').addEventListener('click', () => {
+  const name = pickStudent(session)
+  $('pickedName').textContent = name ?? '（没有人可选）'
+  render()
+})
+
+$('quiz').addEventListener('change', (e) => {
+  if (e.target.type !== 'radio') return
+  const qi = Number(e.target.name.replace('q', ''))
+  answers[qi] = Number(e.target.value)
+})
+
+$('submitQuiz').addEventListener('click', () => {
+  if (answers.some((a) => a < 0)) {
+    alert('还有题目未作答')
+    return
+  }
+  if (!session.quiz) startQuiz(session, QUESTIONS)
+  const name = $('pickedName').textContent
+  const who = name && name !== '—' && name !== '（没有人可选）' ? name : '演示学生'
+  const { score, detail } = submitQuiz(session, who, answers)
+  $('quizResult').innerHTML = `<div class="result">${who} 得分 <b>${score}</b> 分（答对 ${detail.filter((d) => d.correct).length}/${detail.length}）</div>`
+  render()
+})
+
+startQuiz(session, QUESTIONS)
+renderQuiz()
+render()
+</script>
+</body>
+</html>

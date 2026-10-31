@@ -1,0 +1,9 @@
+{
+  "name": "smart-classroom",
+  "version": "1.0.0",
+  "private": true,
+  "description": "智慧课堂工作台（签到/点名/随堂测/看板）",
+  "type": "module",
+  "scripts": { "test": "node --test tests/" },
+  "engines": { "node": ">=18" }
+}
