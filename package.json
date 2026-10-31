@@ -1,0 +1,12 @@
+{
+  "name": "deck-forge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "从大纲 JSON 生成 PPTX（6 种版式 + 双主题）",
+  "type": "module",
+  "scripts": {
+    "build": "python scripts/build_deck.py --content content/demo.json --out out/demo.pptx",
+    "test": "node --test tests/"
+  },
+  "engines": { "node": ">=18" }
+}
