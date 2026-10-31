@@ -1,0 +1,61 @@
+{
+  "name": "校园活动策划多智能体团队",
+  "description": "一个学生会要办「AI 文化节」，由 6 个角色分工协作：策划、场地、宣传、预算、审批风控、现场执行；产出完整可执行的策划案。",
+  "roles": [
+    { "name": "planner", "title": "活动策划", "goal": "把一句想法变成有主题、有环节、有节奏的方案" },
+    { "name": "venue", "title": "场地与物资", "goal": "锁定场地、设备与物资清单" },
+    { "name": "promo", "title": "宣传推广", "goal": "产出物料文案与投放节奏" },
+    { "name": "budget", "title": "预算控制", "goal": "把钱花在刀刃上并留出应急金" },
+    { "name": "risk", "title": "审批风控", "goal": "识别合规与安全风险并提出整改" },
+    { "name": "executor", "title": "现场执行", "goal": "把方案拆成当天可执行的岗位表" }
+  ],
+  "tasks": [
+    {
+      "id": "concept",
+      "role": "planner",
+      "title": "活动定位与环节设计",
+      "prompt": "围绕「AI 文化节」，给出主题、目标人群、3 个主环节与时间轴",
+      "outputs": ["theme", "segments", "timeline"]
+    },
+    {
+      "id": "site",
+      "role": "venue",
+      "title": "场地与物资",
+      "deps": ["concept"],
+      "prompt": "根据环节选择场地类型，列出设备与物资清单",
+      "outputs": ["venue_type", "equipment", "supplies"]
+    },
+    {
+      "id": "budget",
+      "role": "budget",
+      "title": "预算编制",
+      "deps": ["site"],
+      "prompt": "按场地/设备/物料/宣传四项编预算，并留 10% 应急金",
+      "outputs": ["items", "total", "contingency"]
+    },
+    {
+      "id": "promo",
+      "role": "promo",
+      "title": "宣传方案",
+      "deps": ["concept"],
+      "prompt": "给出主视觉文案、三条社媒推文与投放时间表",
+      "outputs": ["slogan", "posts", "schedule"]
+    },
+    {
+      "id": "review",
+      "role": "risk",
+      "title": "审批与风险",
+      "deps": ["budget", "promo"],
+      "prompt": "检查场地报备、消防、隐私（拍照授权）与预算合规，列出整改项",
+      "outputs": ["risks", "fixes", "approval_checklist"]
+    },
+    {
+      "id": "rundown",
+      "role": "executor",
+      "title": "现场执行表",
+      "deps": ["review"],
+      "prompt": "把方案拆成当天岗位表：谁、在几点、做什么、出问题找谁",
+      "outputs": ["roles_on_site", "rundown"]
+    }
+  ]
+}

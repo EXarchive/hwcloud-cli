@@ -1,0 +1,9 @@
+{
+  "name": "agentteam-campus",
+  "version": "1.0.0",
+  "private": true,
+  "description": "校园活动策划多 Agent 协作（6 角色 + 依赖图编排）",
+  "type": "module",
+  "scripts": { "demo": "node src/run-demo.mjs", "test": "node --test tests/" },
+  "engines": { "node": ">=18" }
+}
