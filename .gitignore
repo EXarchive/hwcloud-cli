@@ -1,0 +1,7 @@
+# 由 terraform 生成
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+crash.log

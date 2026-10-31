@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IaC 静态站 · 用代码交付网站</title>
+<link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+<main>
+  <header class="hero">
+    <span class="badge">Terraform · Huawei Cloud OBS</span>
+    <h1>这个站点是「一条命令」交付的</h1>
+    <p class="lede">
+      桶、静态网站配置、对象上传、防盗链与 IP 黑名单全部由 Terraform 声明。
+      没有一次手工点控制台，改配置再 <code>terraform apply</code> 即可得到一致结果。
+    </p>
+  </header>
+
+  <section class="grid">
+    <article class="card">
+      <h2>① 声明式交付</h2>
+      <p>桶 ACL、website 首页/错误页、对象 Content-Type 与 ETag 全在 <code>main.tf</code> 里声明，状态可追溯、可回滚。</p>
+    </article>
+    <article class="card">
+      <h2>② 访问控制</h2>
+      <p>公开只读 + 可选防盗链白名单 + 桶策略 IP 黑名单，三层控制互不打架，随变量开关。</p>
+    </article>
+    <article class="card">
+      <h2>③ 幂等可重跑</h2>
+      <p>用 <code>filemd5</code> 作 ETag，内容未变不会重复上传；新增文件自动纳入 <code>for_each</code>。</p>
+    </article>
+  </section>
+
+  <section class="console">
+    <div class="console-title">交付命令</div>
+    <pre><code>cd terraform
+terraform init
+terraform plan  -var="bucket_name=my-ict-site-2026"
+terraform apply -var="bucket_name=my-ict-site-2026"
+# 输出 website_endpoint 即访问地址</code></pre>
+  </section>
+
+  <footer>
+    <span>静态资源已随仓库提交，<code>ip_blacklist</code> 与 <code>allowed_referers</code> 默认关闭。</span>
+  </footer>
+</main>
+</body>
+</html>

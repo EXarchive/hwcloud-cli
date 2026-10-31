@@ -1,0 +1,7 @@
+# 复制为 terraform.tfvars 并填入真实值
+bucket_name      = "your-unique-bucket-name"
+region           = "cn-north-4"
+site_dir         = "../site"
+allow_public_read = true
+allowed_referers = []
+ip_blacklist     = []
