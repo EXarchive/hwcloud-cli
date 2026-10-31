@@ -1,0 +1,60 @@
+{
+  "name": "毕业设计多智能体协作",
+  "description": "一名学生做毕业设计，由 5 个角色分工：选题顾问、文献综述、方案设计、实现工程师、评审专家；最后汇总成开题报告。",
+  "roles": [
+    { "name": "advisor", "title": "选题顾问", "goal": "把模糊兴趣收敛成可做的题目" },
+    { "name": "researcher", "title": "文献综述员", "goal": "梳理研究现状与空白" },
+    { "name": "architect", "title": "方案设计", "goal": "给出技术路线与里程碑" },
+    { "name": "engineer", "title": "实现工程师", "goal": "产出可运行的原型骨架" },
+    { "name": "reviewer", "title": "评审专家", "goal": "挑毛病并给出改进项" }
+  ],
+  "tasks": [
+    {
+      "id": "topic",
+      "role": "advisor",
+      "title": "收敛选题",
+      "prompt": "根据学生兴趣方向给出 3 个可落地的毕设题目，并推荐 1 个",
+      "outputs": ["topics", "recommended"]
+    },
+    {
+      "id": "survey",
+      "role": "researcher",
+      "title": "文献综述",
+      "deps": ["topic"],
+      "prompt": "围绕推荐题目梳理研究现状、主流方法与空白点",
+      "outputs": ["status_quo", "gap"]
+    },
+    {
+      "id": "design",
+      "role": "architect",
+      "title": "方案设计",
+      "deps": ["survey"],
+      "prompt": "给出系统架构、关键技术选型与 8 周里程碑",
+      "outputs": ["architecture", "milestones"]
+    },
+    {
+      "id": "build",
+      "role": "engineer",
+      "title": "原型实现",
+      "deps": ["design"],
+      "prompt": "按架构给出最小可运行原型的关键代码与运行方式",
+      "outputs": ["code", "runbook"]
+    },
+    {
+      "id": "review",
+      "role": "reviewer",
+      "title": "评审",
+      "deps": ["build", "design"],
+      "prompt": "从创新性、可行性、工程量三个维度评审并列出改进项",
+      "outputs": ["score", "issues"]
+    },
+    {
+      "id": "report",
+      "role": "advisor",
+      "title": "汇总开题报告",
+      "deps": ["review", "survey"],
+      "prompt": "把以上成果汇总成开题报告大纲",
+      "outputs": ["outline"]
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "name": "多 Agent 面试协同团队",
+  "description": "一场技术岗模拟面试：简历解析 → 技术面 → 项目面 → HR 面（三面并行）→ 汇总评估报告。每个面试官是独立角色，互不影响，最后交叉校准。",
+  "roles": [
+    { "name": "screener", "title": "简历解析官", "goal": "把简历结构化，定位亮点与可疑点" },
+    { "name": "tech", "title": "技术面试官", "goal": "考察计算机基础与编码能力" },
+    { "name": "project", "title": "项目面试官", "goal": "追问项目细节，识别真实贡献度" },
+    { "name": "hr", "title": "HR 面试官", "goal": "评估动机、协作与稳定性" },
+    { "name": "chair", "title": "面试主席", "goal": "交叉校准各面评分，给出录用建议" }
+  ],
+  "tasks": [
+    {
+      "id": "resume",
+      "role": "screener",
+      "title": "简历结构化",
+      "prompt": "解析简历，抽取技能栈、项目与时间线，标注需在面试中验证的点",
+      "outputs": ["skills", "projects", "verify_points"]
+    },
+    {
+      "id": "tech",
+      "role": "tech",
+      "title": "技术面",
+      "deps": ["resume"],
+      "prompt": "按技能栈出 5 道递进难度题目并评分（0-5）",
+      "outputs": ["questions", "score", "evidence"]
+    },
+    {
+      "id": "project",
+      "role": "project",
+      "title": "项目面",
+      "deps": ["resume"],
+      "prompt": "针对每个项目追问 STARR（情境/任务/行动/结果/反思）并评贡献度",
+      "outputs": ["questions", "score", "contribution"]
+    },
+    {
+      "id": "hr",
+      "role": "hr",
+      "title": "HR 面",
+      "deps": ["resume"],
+      "prompt": "考察动机、团队协作与稳定性，给出风险点",
+      "outputs": ["questions", "score", "risks"]
+    },
+    {
+      "id": "calibrate",
+      "role": "chair",
+      "title": "交叉校准",
+      "deps": ["tech", "project", "hr"],
+      "prompt": "对比三面评分差异，解释分歧并给出最终建议",
+      "outputs": ["variance", "final_score", "decision"]
+    },
+    {
+      "id": "report",
+      "role": "chair",
+      "title": "评估报告",
+      "deps": ["calibrate"],
+      "prompt": "输出面试评估报告：结论、证据、待改进项",
+      "outputs": ["conclusion", "evidence", "improvements"]
+    }
+  ]
+}

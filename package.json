@@ -1,0 +1,9 @@
+{
+  "name": "agentteam-interview",
+  "version": "1.0.0",
+  "private": true,
+  "description": "多 Agent 面试协同团队（三面并行 + 主席交叉校准）",
+  "type": "module",
+  "scripts": { "demo": "node src/run-demo.mjs", "test": "node --test tests/" },
+  "engines": { "node": ">=18" }
+}
